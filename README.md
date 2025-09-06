@@ -1,1 +1,1 @@
-# AI_Image_Detector
+# IsItAI - AI_Image_Detector
