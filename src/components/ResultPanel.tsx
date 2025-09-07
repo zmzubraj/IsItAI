@@ -22,7 +22,7 @@ interface ResultPanelProps {
 export default function ResultPanel({ result, loading, onReset, image }: ResultPanelProps) {
   if (loading) {
     return (
-      <div className="mt-4 text-sm text-gray-500">Analyzing...</div>
+      <div className="mt-4 text-sm text-gray-500 dark:text-gray-400">Analyzing...</div>
     );
   }
 
@@ -31,7 +31,7 @@ export default function ResultPanel({ result, loading, onReset, image }: ResultP
   const verdict = result.finalVerdict === 'AI-generated' ? 'AI Generated' : 'Real Photo';
 
   return (
-    <div className="mt-4 w-full max-w-sm rounded border p-4 text-sm text-gray-700">
+    <div className="card mt-4 w-full max-w-sm text-sm text-gray-800 dark:text-gray-100">
       <p>Frequency Spectrum: {result.frequencySpectrum.toFixed(2)}</p>
       <p>Noise Residual: {result.noiseResidual.toFixed(2)}</p>
       <p>Color Histogram: {result.colorHistogram.toFixed(2)}</p>
@@ -44,14 +44,14 @@ export default function ResultPanel({ result, loading, onReset, image }: ResultP
         <button
           type="button"
           onClick={() => image && generateCertificate(image, result)}
-          className="rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600"
+          className="btn"
         >
           Download Certificate
         </button>
         <button
           type="button"
           onClick={onReset}
-          className="rounded bg-gray-200 px-4 py-2 text-gray-800 hover:bg-gray-300"
+          className="btn-secondary"
         >
           Clear
         </button>

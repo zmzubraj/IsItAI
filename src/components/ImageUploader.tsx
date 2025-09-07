@@ -76,9 +76,9 @@ export default function ImageUploader({ onFileSelect, maxSizeMB = 5 }: ImageUplo
   };
 
   return (
-    <div className="flex flex-col items-center">
+    <div className="flex w-full flex-col items-center">
       <input type="file" accept="image/*" onChange={handleChange} />
-      {error && <p className="mt-2 text-sm text-red-500">{error}</p>}
+      {error && <p className="mt-2 text-sm text-red-500 dark:text-red-400">{error}</p>}
       {preview && (
         <Image
           src={preview}
@@ -89,7 +89,7 @@ export default function ImageUploader({ onFileSelect, maxSizeMB = 5 }: ImageUplo
         />
       )}
       <ResultPanel result={result} loading={loading} onReset={handleReset} image={preview} />
-      <p className="mt-2 text-xs text-gray-500">No data leaves your device</p>
+      <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">No data leaves your device</p>
     </div>
   );
 }

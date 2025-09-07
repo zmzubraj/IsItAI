@@ -42,10 +42,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${poppins.variable} ${robotoMono.variable} flex min-h-screen flex-col bg-white text-gray-900 antialiased`}
+        className={`${poppins.variable} ${robotoMono.variable} flex min-h-screen flex-col bg-white text-gray-900 antialiased dark:bg-gray-900 dark:text-gray-100 font-sans`}
       >
         {children}
-        <footer className="mt-auto p-4 text-center text-xs text-gray-500">
+        <footer className="mt-auto p-4 text-center text-xs text-gray-500 dark:text-gray-400">
           © {new Date().getFullYear()} IsItAI. All rights reserved.
         </footer>
       </body>
