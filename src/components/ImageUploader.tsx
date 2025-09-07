@@ -8,6 +8,7 @@ import ProgressConsole from './ProgressConsole';
 interface ImageUploaderProps {
   onFileSelect: (dataUrl: string) => void;
   maxSizeMB?: number;
+  onAnalysisComplete?: () => void;
 }
 
 interface WorkerResult {
@@ -34,6 +35,7 @@ export default function ImageUploader({ onFileSelect, maxSizeMB = 5 }: ImageUplo
       if ('probability' in e.data) {
         setResult(e.data);
         setLoading(false);
+        onAnalysisComplete?.();
       } else if ('step' in e.data) {
         setSteps((prev) => [...prev, e.data]);
       }
