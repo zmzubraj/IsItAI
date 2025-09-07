@@ -77,8 +77,24 @@ export default function ImageUploader({ onFileSelect, maxSizeMB = 5, onAnalysisC
 
   return (
     <div className="flex w-full flex-col items-center">
-      <input type="file" accept="image/*" onChange={handleChange} />
-      {error && <p className="mt-2 text-sm text-red-500 dark:text-red-400">{error}</p>}
+      <label htmlFor="image-upload" className="sr-only">
+        Upload image
+      </label>
+      <input
+        id="image-upload"
+        type="file"
+        accept="image/*"
+        onChange={handleChange}
+        aria-describedby={error ? 'image-upload-error' : undefined}
+      />
+      {error && (
+        <p
+          id="image-upload-error"
+          className="mt-2 text-sm text-red-500 dark:text-red-400"
+        >
+          {error}
+        </p>
+      )}
       {preview && (
         <Image
           src={preview}
