@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import { generateCertificate } from '../utils/generateCertificate';
 
 interface WorkerResult {
   probability: number;
@@ -43,7 +42,11 @@ export default function ResultPanel({ result, loading, onReset, image }: ResultP
       <div className="mt-4 flex gap-2">
         <button
           type="button"
-          onClick={() => image && generateCertificate(image, result)}
+          onClick={async () => {
+            if (!image) return;
+            const { generateCertificate } = await import('../utils/generateCertificate');
+            await generateCertificate(image, result);
+          }}
           className="btn"
         >
           Download Certificate

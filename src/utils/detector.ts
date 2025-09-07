@@ -1,7 +1,7 @@
 'use client';
 
-import * as ort from 'onnxruntime-web';
-import exifr from 'exifr';
+// Heavy libraries are loaded on demand so the initial bundle stays light.
+import type * as ortTypes from 'onnxruntime-web';
 import { computeHeuristics, HeuristicScores } from './heuristics';
 
 export interface DetectionResult extends HeuristicScores {
@@ -16,6 +16,7 @@ export interface DetectionResult extends HeuristicScores {
 export async function detectImage(
   image: HTMLImageElement | HTMLCanvasElement,
 ): Promise<DetectionResult> {
+  const ort = await import('onnxruntime-web');
   const size = 28;
   const canvas = document.createElement('canvas');
   canvas.width = size;
@@ -40,10 +41,10 @@ export async function detectImage(
   });
 
   const tensor = new ort.Tensor('float32', input, [1, 1, size, size]);
-  const feeds: Record<string, ort.Tensor> = {};
-  feeds[session.inputNames[0]] = tensor;
+  const feeds: Record<string, ortTypes.Tensor> = {};
+  feeds[session.inputNames[0]] = tensor as unknown as ortTypes.Tensor;
   const results = await session.run(feeds);
-  const output = results[session.outputNames[0]] as ort.Tensor;
+  const output = results[session.outputNames[0]] as ortTypes.Tensor;
   const scores = Array.from(output.data as Float32Array);
   const max = Math.max(...scores);
   const exps = scores.map((s) => Math.exp(s - max));
@@ -60,6 +61,7 @@ export async function detectImage(
       buffer = await res.arrayBuffer();
     }
     if (buffer) {
+      const exifr = (await import('exifr')).default;
       const exif = await exifr.parse(buffer);
       cameraInfoPresent = Boolean(exif?.Make || exif?.Model);
     }
