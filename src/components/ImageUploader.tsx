@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import ResultPanel from './ResultPanel';
+import ProgressConsole from './ProgressConsole';
 
 interface ImageUploaderProps {
   onFileSelect: (dataUrl: string) => void;
@@ -23,15 +24,18 @@ export default function ImageUploader({ onFileSelect, maxSizeMB = 5 }: ImageUplo
   const [error, setError] = useState<string>('');
   const [result, setResult] = useState<WorkerResult | null>(null);
   const [loading, setLoading] = useState(false);
+  const [steps, setSteps] = useState<{ step: string; progress: number }[]>([]);
   const workerRef = useRef<Worker>();
 
   useEffect(() => {
     const worker = new Worker(new URL('./detectorWorker.ts', import.meta.url));
     workerRef.current = worker;
-    const handler = (e: MessageEvent<WorkerResult>) => {
+    const handler = (e: MessageEvent<WorkerResult | { step: string; progress: number }>) => {
       if ('probability' in e.data) {
         setResult(e.data);
         setLoading(false);
+      } else if ('step' in e.data) {
+        setSteps((prev) => [...prev, e.data]);
       }
     };
     worker.addEventListener('message', handler);
@@ -62,6 +66,7 @@ export default function ImageUploader({ onFileSelect, maxSizeMB = 5 }: ImageUplo
       setPreview(dataUrl);
       setResult(null);
       setLoading(true);
+      setSteps([]);
       onFileSelect(dataUrl);
       workerRef.current?.postMessage({ imageData: dataUrl });
     };
@@ -73,6 +78,7 @@ export default function ImageUploader({ onFileSelect, maxSizeMB = 5 }: ImageUplo
     setResult(null);
     setError('');
     setLoading(false);
+    setSteps([]);
   };
 
   return (
@@ -88,6 +94,7 @@ export default function ImageUploader({ onFileSelect, maxSizeMB = 5 }: ImageUplo
           className="mt-4 rounded object-contain"
         />
       )}
+      {loading && <ProgressConsole steps={steps} />}
       <ResultPanel result={result} loading={loading} onReset={handleReset} image={preview} />
       <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">No data leaves your device</p>
     </div>
