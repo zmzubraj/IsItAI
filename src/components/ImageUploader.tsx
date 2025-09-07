@@ -88,7 +88,7 @@ export default function ImageUploader({ onFileSelect, maxSizeMB = 5 }: ImageUplo
           className="mt-4 rounded object-contain"
         />
       )}
-      <ResultPanel result={result} loading={loading} onReset={handleReset} />
+      <ResultPanel result={result} loading={loading} onReset={handleReset} image={preview} />
       <p className="mt-2 text-xs text-gray-500">No data leaves your device</p>
     </div>
   );
