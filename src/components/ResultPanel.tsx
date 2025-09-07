@@ -1,15 +1,7 @@
 'use client';
 
 import React from 'react';
-
-interface WorkerResult {
-  probability: number;
-  cameraInfoPresent: boolean;
-  frequencySpectrum: number;
-  noiseResidual: number;
-  colorHistogram: number;
-  finalVerdict: string;
-}
+import type { WorkerResult } from '../types/worker';
 
 interface ResultPanelProps {
   result: WorkerResult | null;

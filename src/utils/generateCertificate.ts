@@ -1,14 +1,7 @@
 // Lazily load pdf-lib only when generating a certificate to avoid
 // pulling the heavy library into the initial bundle.
 
-interface WorkerResult {
-  probability: number;
-  cameraInfoPresent: boolean;
-  frequencySpectrum: number;
-  noiseResidual: number;
-  colorHistogram: number;
-  finalVerdict: string;
-}
+import type { WorkerResult } from '../types/worker';
 
 export async function generateCertificate(imageDataUrl: string, result: WorkerResult) {
   const { PDFDocument, StandardFonts } = await import('pdf-lib');
@@ -112,7 +105,7 @@ export async function generateCertificate(imageDataUrl: string, result: WorkerRe
   }
 
   const pdfBytes = await pdfDoc.save();
-  const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+  const blob = new Blob([pdfBytes.buffer as ArrayBuffer], { type: 'application/pdf' });
   const link = document.createElement('a');
   link.href = URL.createObjectURL(blob);
   link.download = 'IsItAI_Certificate.pdf';
