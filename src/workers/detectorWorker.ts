@@ -109,6 +109,7 @@ self.addEventListener('message', async (event: MessageEvent<{ imageData: string 
   const { imageData } = event.data;
   try {
     const ort = await import('onnxruntime-web');
+    (self as DedicatedWorkerGlobalScope).postMessage({ step: 'Loading model', progress: 10 });
 
     const response = await fetch(imageData);
     const blob = await response.blob();
@@ -131,6 +132,8 @@ self.addEventListener('message', async (event: MessageEvent<{ imageData: string 
     const session = await ort.InferenceSession.create('/models/mnist-8.onnx', {
       executionProviders: ['webgpu', 'wasm'],
     });
+    (self as DedicatedWorkerGlobalScope).postMessage({ step: 'Model loaded', progress: 30 });
+
     const tensor = new ort.Tensor('float32', input, [1, 1, size, size]);
     const feeds: Record<string, ortTypes.Tensor> = {};
     feeds[session.inputNames[0]] = tensor as unknown as ortTypes.Tensor;
@@ -142,8 +145,10 @@ self.addEventListener('message', async (event: MessageEvent<{ imageData: string 
     const sum = exps.reduce((a, b) => a + b, 0);
     const probability = exps[0] / sum;
 
+    (self as DedicatedWorkerGlobalScope).postMessage({ step: 'Computing heuristics', progress: 60 });
     const heuristics = computeHeuristics(bitmap);
 
+    (self as DedicatedWorkerGlobalScope).postMessage({ step: 'Parsing EXIF data', progress: 80 });
     let cameraInfoPresent = false;
     try {
       const buffer = await blob.arrayBuffer();
@@ -163,6 +168,7 @@ self.addEventListener('message', async (event: MessageEvent<{ imageData: string 
       ...heuristics,
     };
 
+    (self as DedicatedWorkerGlobalScope).postMessage({ step: 'Analysis complete', progress: 100 });
     (self as DedicatedWorkerGlobalScope).postMessage(result);
   } catch (err) {
     (self as DedicatedWorkerGlobalScope).postMessage({ error: (err as Error).message });
