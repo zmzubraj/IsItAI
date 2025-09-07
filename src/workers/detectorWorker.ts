@@ -1,5 +1,5 @@
-import * as ort from 'onnxruntime-web';
-import exifr from 'exifr';
+// Defer loading heavy libraries until the worker receives a message.
+import type * as ortTypes from 'onnxruntime-web';
 
 interface HeuristicScores {
   frequencySpectrum: number;
@@ -108,6 +108,8 @@ function computeHeuristics(bitmap: ImageBitmap): HeuristicScores {
 self.addEventListener('message', async (event: MessageEvent<{ imageData: string }>) => {
   const { imageData } = event.data;
   try {
+    const ort = await import('onnxruntime-web');
+
     const response = await fetch(imageData);
     const blob = await response.blob();
     const bitmap = await createImageBitmap(blob);
@@ -130,10 +132,10 @@ self.addEventListener('message', async (event: MessageEvent<{ imageData: string 
       executionProviders: ['webgpu', 'wasm'],
     });
     const tensor = new ort.Tensor('float32', input, [1, 1, size, size]);
-    const feeds: Record<string, ort.Tensor> = {};
-    feeds[session.inputNames[0]] = tensor;
+    const feeds: Record<string, ortTypes.Tensor> = {};
+    feeds[session.inputNames[0]] = tensor as unknown as ortTypes.Tensor;
     const results = await session.run(feeds);
-    const output = results[session.outputNames[0]] as ort.Tensor;
+    const output = results[session.outputNames[0]] as ortTypes.Tensor;
     const scores = Array.from(output.data as Float32Array);
     const max = Math.max(...scores);
     const exps = scores.map((s) => Math.exp(s - max));
@@ -145,6 +147,7 @@ self.addEventListener('message', async (event: MessageEvent<{ imageData: string 
     let cameraInfoPresent = false;
     try {
       const buffer = await blob.arrayBuffer();
+      const exifr = (await import('exifr')).default;
       const exif = await exifr.parse(buffer);
       cameraInfoPresent = Boolean(exif?.Make || exif?.Model);
     } catch {

@@ -1,4 +1,5 @@
-import { PDFDocument, StandardFonts } from 'pdf-lib';
+// Lazily load pdf-lib only when generating a certificate to avoid
+// pulling the heavy library into the initial bundle.
 
 interface WorkerResult {
   probability: number;
@@ -10,6 +11,8 @@ interface WorkerResult {
 }
 
 export async function generateCertificate(imageDataUrl: string, result: WorkerResult) {
+  const { PDFDocument, StandardFonts } = await import('pdf-lib');
+
   const pdfDoc = await PDFDocument.create();
   const page = pdfDoc.addPage([595, 842]); // A4 size
   const { width, height } = page.getSize();
