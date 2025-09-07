@@ -1,15 +1,21 @@
 'use client';
 
 import * as ort from 'onnxruntime-web';
+import exifr from 'exifr';
+import { computeHeuristics, HeuristicScores } from './heuristics';
+
+export interface DetectionResult extends HeuristicScores {
+  probability: number;
+  cameraInfoPresent: boolean;
+}
 
 /**
- * Runs a simple MNIST model on the provided image element.
- * The image is resized to 28x28, converted to grayscale and normalized.
- * Returns the probability for class 0 as an example.
+ * Runs a simple MNIST model on the provided image element and returns
+ * the model probability together with heuristic scores and EXIF info.
  */
-export async function detectProbability(
+export async function detectImage(
   image: HTMLImageElement | HTMLCanvasElement,
-): Promise<number> {
+): Promise<DetectionResult> {
   const size = 28;
   const canvas = document.createElement('canvas');
   canvas.width = size;
@@ -25,7 +31,6 @@ export async function detectProbability(
   const input = new Float32Array(size * size);
 
   for (let i = 0; i < data.length; i += 4) {
-    // Average RGB to grayscale and normalize to [0,1]
     const avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
     input[i / 4] = avg / 255;
   }
@@ -43,7 +48,27 @@ export async function detectProbability(
   const max = Math.max(...scores);
   const exps = scores.map((s) => Math.exp(s - max));
   const sum = exps.reduce((a, b) => a + b, 0);
-  return exps[0] / sum;
+  const probability = exps[0] / sum;
+
+  const heuristics = computeHeuristics(image);
+
+  let cameraInfoPresent = false;
+  try {
+    let buffer: ArrayBuffer | undefined;
+    if (image instanceof HTMLImageElement && image.src.startsWith('data:')) {
+      const res = await fetch(image.src);
+      buffer = await res.arrayBuffer();
+    }
+    if (buffer) {
+      const exif = await exifr.parse(buffer);
+      cameraInfoPresent = Boolean(exif?.Make || exif?.Model);
+    }
+  } catch {
+    // ignore EXIF parsing errors
+  }
+
+  return { probability, cameraInfoPresent, ...heuristics };
 }
 
-export default detectProbability;
+export default detectImage;
+
