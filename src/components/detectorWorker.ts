@@ -1,0 +1,2 @@
+import '../workers/detectorWorker';
+export {};

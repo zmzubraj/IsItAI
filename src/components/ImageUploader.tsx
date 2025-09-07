@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 
 interface ImageUploaderProps {
@@ -8,9 +8,35 @@ interface ImageUploaderProps {
   maxSizeMB?: number;
 }
 
+interface WorkerResult {
+  probability: number;
+  cameraInfoPresent: boolean;
+  frequencySpectrum: number;
+  noiseResidual: number;
+  colorHistogram: number;
+  finalVerdict: string;
+}
+
 export default function ImageUploader({ onFileSelect, maxSizeMB = 5 }: ImageUploaderProps) {
   const [preview, setPreview] = useState<string | null>(null);
   const [error, setError] = useState<string>('');
+  const [result, setResult] = useState<WorkerResult | null>(null);
+  const workerRef = useRef<Worker>();
+
+  useEffect(() => {
+    const worker = new Worker(new URL('./detectorWorker.ts', import.meta.url));
+    workerRef.current = worker;
+    const handler = (e: MessageEvent<WorkerResult>) => {
+      if ('probability' in e.data) {
+        setResult(e.data);
+      }
+    };
+    worker.addEventListener('message', handler);
+    return () => {
+      worker.removeEventListener('message', handler);
+      worker.terminate();
+    };
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -29,9 +55,10 @@ export default function ImageUploader({ onFileSelect, maxSizeMB = 5 }: ImageUplo
     setError('');
     const reader = new FileReader();
     reader.onloadend = () => {
-      const result = reader.result as string;
-      setPreview(result);
-      onFileSelect(result);
+      const dataUrl = reader.result as string;
+      setPreview(dataUrl);
+      onFileSelect(dataUrl);
+      workerRef.current?.postMessage({ imageData: dataUrl });
     };
     reader.readAsDataURL(file);
   };
@@ -48,6 +75,16 @@ export default function ImageUploader({ onFileSelect, maxSizeMB = 5 }: ImageUplo
           height={200}
           className="mt-4 rounded object-contain"
         />
+      )}
+      {result && (
+        <div className="mt-4 text-sm text-gray-700">
+          <p>Probability: {result.probability.toFixed(2)}</p>
+          <p>Frequency Spectrum: {result.frequencySpectrum.toFixed(2)}</p>
+          <p>Noise Residual: {result.noiseResidual.toFixed(2)}</p>
+          <p>Color Histogram: {result.colorHistogram.toFixed(2)}</p>
+          <p>Camera Info Present: {result.cameraInfoPresent ? 'Yes' : 'No'}</p>
+          <p className="font-semibold">Verdict: {result.finalVerdict}</p>
+        </div>
       )}
       <p className="mt-2 text-xs text-gray-500">No data leaves your device</p>
     </div>
