@@ -1,5 +1,6 @@
 // Defer loading heavy libraries until the worker receives a message.
 import type * as ortTypes from 'onnxruntime-web';
+import type { WorkerResult } from '../types/worker';
 
 interface HeuristicScores {
   frequencySpectrum: number;
@@ -7,11 +8,6 @@ interface HeuristicScores {
   colorHistogram: number;
 }
 
-interface WorkerResult extends HeuristicScores {
-  probability: number;
-  cameraInfoPresent: boolean;
-  finalVerdict: string;
-}
 
 function toGrayscale(data: Uint8ClampedArray): Float32Array {
   const gray = new Float32Array(data.length / 4);

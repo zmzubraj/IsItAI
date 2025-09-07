@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import ResultPanel from './ResultPanel';
 import ProgressConsole from './ProgressConsole';
+import type { WorkerResult } from '../types/worker';
 
 interface ImageUploaderProps {
   onFileSelect: (dataUrl: string) => void;
@@ -11,22 +12,13 @@ interface ImageUploaderProps {
   onAnalysisComplete?: () => void;
 }
 
-interface WorkerResult {
-  probability: number;
-  cameraInfoPresent: boolean;
-  frequencySpectrum: number;
-  noiseResidual: number;
-  colorHistogram: number;
-  finalVerdict: string;
-}
-
-export default function ImageUploader({ onFileSelect, maxSizeMB = 5 }: ImageUploaderProps) {
+export default function ImageUploader({ onFileSelect, maxSizeMB = 5, onAnalysisComplete }: ImageUploaderProps) {
   const [preview, setPreview] = useState<string | null>(null);
   const [error, setError] = useState<string>('');
   const [result, setResult] = useState<WorkerResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [steps, setSteps] = useState<{ step: string; progress: number }[]>([]);
-  const workerRef = useRef<Worker>();
+  const workerRef = useRef<Worker | null>(null);
 
   useEffect(() => {
     const worker = new Worker(new URL('./detectorWorker.ts', import.meta.url));
@@ -37,7 +29,7 @@ export default function ImageUploader({ onFileSelect, maxSizeMB = 5 }: ImageUplo
         setLoading(false);
         onAnalysisComplete?.();
       } else if ('step' in e.data) {
-        setSteps((prev) => [...prev, e.data]);
+        setSteps((prev) => [...prev, e.data as { step: string; progress: number }]);
       }
     };
     worker.addEventListener('message', handler);
