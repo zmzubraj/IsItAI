@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Poppins, Roboto_Mono } from "next/font/google";
 import "./globals.css";
+import ServiceWorkerRegister from "./service-worker-register";
 
 const poppins = Poppins({
   variable: "--font-poppins",
@@ -16,6 +17,7 @@ const robotoMono = Roboto_Mono({
 export const metadata: Metadata = {
   title: "IsItAI",
   description: "Detect AI-generated images instantly.",
+  manifest: "/manifest.json",
   openGraph: {
     title: "IsItAI",
     description: "Detect AI-generated images instantly.",
@@ -45,6 +47,7 @@ export default function RootLayout({
         className={`${poppins.variable} ${robotoMono.variable} flex min-h-screen flex-col bg-white text-gray-900 antialiased dark:bg-gray-900 dark:text-gray-100 font-sans`}
       >
         {children}
+        <ServiceWorkerRegister />
         <footer className="mt-auto p-4 text-center text-xs text-gray-500 dark:text-gray-400">
           © {new Date().getFullYear()} IsItAI. All rights reserved.
         </footer>
