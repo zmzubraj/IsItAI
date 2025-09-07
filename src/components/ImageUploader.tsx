@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
+import ResultPanel from './ResultPanel';
 
 interface ImageUploaderProps {
   onFileSelect: (dataUrl: string) => void;
@@ -21,6 +22,7 @@ export default function ImageUploader({ onFileSelect, maxSizeMB = 5 }: ImageUplo
   const [preview, setPreview] = useState<string | null>(null);
   const [error, setError] = useState<string>('');
   const [result, setResult] = useState<WorkerResult | null>(null);
+  const [loading, setLoading] = useState(false);
   const workerRef = useRef<Worker>();
 
   useEffect(() => {
@@ -29,6 +31,7 @@ export default function ImageUploader({ onFileSelect, maxSizeMB = 5 }: ImageUplo
     const handler = (e: MessageEvent<WorkerResult>) => {
       if ('probability' in e.data) {
         setResult(e.data);
+        setLoading(false);
       }
     };
     worker.addEventListener('message', handler);
@@ -57,10 +60,19 @@ export default function ImageUploader({ onFileSelect, maxSizeMB = 5 }: ImageUplo
     reader.onloadend = () => {
       const dataUrl = reader.result as string;
       setPreview(dataUrl);
+      setResult(null);
+      setLoading(true);
       onFileSelect(dataUrl);
       workerRef.current?.postMessage({ imageData: dataUrl });
     };
     reader.readAsDataURL(file);
+  };
+
+  const handleReset = () => {
+    setPreview(null);
+    setResult(null);
+    setError('');
+    setLoading(false);
   };
 
   return (
@@ -76,16 +88,7 @@ export default function ImageUploader({ onFileSelect, maxSizeMB = 5 }: ImageUplo
           className="mt-4 rounded object-contain"
         />
       )}
-      {result && (
-        <div className="mt-4 text-sm text-gray-700">
-          <p>Probability: {result.probability.toFixed(2)}</p>
-          <p>Frequency Spectrum: {result.frequencySpectrum.toFixed(2)}</p>
-          <p>Noise Residual: {result.noiseResidual.toFixed(2)}</p>
-          <p>Color Histogram: {result.colorHistogram.toFixed(2)}</p>
-          <p>Camera Info Present: {result.cameraInfoPresent ? 'Yes' : 'No'}</p>
-          <p className="font-semibold">Verdict: {result.finalVerdict}</p>
-        </div>
-      )}
+      <ResultPanel result={result} loading={loading} onReset={handleReset} />
       <p className="mt-2 text-xs text-gray-500">No data leaves your device</p>
     </div>
   );
